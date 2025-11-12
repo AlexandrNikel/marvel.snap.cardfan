@@ -1,115 +1,513 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width">
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="theme-color" content="#232323">
-    <title>Cardfan Maker</title>
-    <link rel="stylesheet" href="fonts.css?v=40256">
-    <link rel="stylesheet" href="style.css?v=40256">
-    <script src="index.js?v=40256"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фоторедактор</title>
+    <style>
+        :root {
+            --color-background: #fcfcf9;
+            --color-surface: #fffffd;
+            --color-text: #13343b;
+            --color-text-secondary: #626c71;
+            --color-primary: #21808d;
+            --color-primary-hover: #1d7480;
+            --color-border: rgba(94, 82, 64, 0.2);
+            --color-secondary: rgba(94, 82, 64, 0.12);
+            --color-secondary-hover: rgba(94, 82, 64, 0.2);
+            --radius-base: 8px;
+            --radius-lg: 12px;
+            --space-8: 8px;
+            --space-12: 12px;
+            --space-16: 16px;
+            --space-24: 24px;
+            --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-background: #1f2121;
+                --color-surface: #262828;
+                --color-text: #f5f5f5;
+                --color-text-secondary: rgba(167, 169, 169, 0.7);
+                --color-primary: #32b8c6;
+                --color-primary-hover: #2da6b2;
+                --color-border: rgba(119, 124, 124, 0.3);
+                --color-secondary: rgba(119, 124, 124, 0.15);
+                --color-secondary-hover: rgba(119, 124, 124, 0.25);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            background-color: var(--color-background);
+            color: var(--color-text);
+            padding: var(--space-24);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: 600;
+            margin-bottom: var(--space-24);
+            color: var(--color-text);
+        }
+
+        .editor-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr 280px;
+            gap: var(--space-24);
+            margin-bottom: var(--space-24);
+        }
+
+        .panel {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-16);
+        }
+
+        .panel h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: var(--space-16);
+            color: var(--color-text);
+        }
+
+        .canvas-container {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-24);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+            position: relative;
+        }
+
+        #canvas {
+            max-width: 100%;
+            max-height: 600px;
+            border-radius: var(--radius-base);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-area {
+            text-align: center;
+            padding: var(--space-24);
+        }
+
+        .upload-btn {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: var(--radius-base);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: inline-block;
+        }
+
+        .upload-btn:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .template-btn {
+            width: 100%;
+            background: var(--color-secondary);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            padding: 12px;
+            border-radius: var(--radius-base);
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: var(--space-8);
+            transition: background 0.2s;
+            text-align: left;
+        }
+
+        .template-btn:hover {
+            background: var(--color-secondary-hover);
+        }
+
+        .template-btn.active {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        .control-group {
+            margin-bottom: var(--space-16);
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: var(--space-8);
+            color: var(--color-text);
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--color-secondary);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+        }
+
+        .control-group input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+            border: none;
+        }
+
+        .control-value {
+            display: inline-block;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-left: var(--space-8);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--space-12);
+            margin-top: var(--space-24);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border-radius: var(--radius-base);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--color-secondary);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-secondary-hover);
+        }
+
+        .placeholder {
+            text-align: center;
+            color: var(--color-text-secondary);
+        }
+
+        .placeholder-icon {
+            font-size: 48px;
+            margin-bottom: var(--space-16);
+            opacity: 0.5;
+        }
+
+        @media (max-width: 1024px) {
+            .editor-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <canvas id="canvas" width="544" height="700"></canvas>
-
-    <div class="container grid">
-        <div class="group">
-            <div class="group instructions">
-                <b>Instructions</b>
-                <ul>
-                    <li>Select your Art</li>
-                    <li>Use the slider to resize the image to fit</li>
-                    <li>Click and drag art to reposition it</li>
-                    <li>Fill in the card details</li>
-                    <li>Click Download or Right Click &amp; Save</li>
-                    <li>You don't need to screenshot, I make it easy</li>
-                </ul>
+    <div class="container">
+        <h1>🎨 Фоторедактор</h1>
+        
+        <div class="editor-layout">
+            <div class="panel">
+                <h2>Шаблоны</h2>
+                <button class="template-btn active" data-template="original">Оригинал</button>
+                <button class="template-btn" data-template="grayscale">Чёрно-белый</button>
+                <button class="template-btn" data-template="sepia">Сепия</button>
+                <button class="template-btn" data-template="vintage">Винтаж</button>
+                <button class="template-btn" data-template="cool">Холодный</button>
+                <button class="template-btn" data-template="warm">Тёплый</button>
+                <button class="template-btn" data-template="dramatic">Драматичный</button>
             </div>
 
-            <div class="group">
-                <input type="file" id="file-input" name="art" />
-                <button class="btn" id="file-button">Select Art</button>
-                <label id="file-label"></label>
-            </div>
-    
-            <div class="group">
-                <label id="resize-label">Resize Image</label>
-                <input type="range" id="resize-range" min="1" max="200" value="45" />
-            </div>
-
-            <div class="group">
-                <label for="card-frame">Card Quality</label>
-                <select class="input" id="card-frame">
-                    <option>Common</option>
-                    <option>Uncommon</option>
-                    <option>Rare</option>
-                    <option>Epic</option>
-                    <option>Legendary</option>
-                    <option>Ultra</option>
-                    <option>Infinite</option>
-                </select>
-            </div>
-
-            <div class="group">
-                <label>Transparent Background</label>
-                <input type="checkbox" class="input" id="card-background">
-                <label for="card-background"></label>
-            </div>
-        </div>
-
-        <div class="group">
-
-            <div class="group grid">
-                <div class="group energy">
-                    <label id="energy-label">Energy</label>
-                    <input type="text" class="input" id="energy-input" />
+            <div class="canvas-container">
+                <div class="upload-area" id="uploadArea">
+                    <div class="placeholder">
+                        <div class="placeholder-icon">📷</div>
+                        <p>Загрузите изображение для редактирования</p>
+                        <br>
+                        <label class="upload-btn">
+                            Выбрать файл
+                            <input type="file" class="file-input" id="fileInput" accept="image/*">
+                        </label>
+                    </div>
                 </div>
+                <canvas id="canvas" style="display: none;"></canvas>
+            </div>
+
+            <div class="panel">
+                <h2>Детализация</h2>
                 
-                <div class="group power">
-                    <label id="power-label">Power</label>
-                    <input type="text" class="input" id="power-input" />
+                <div class="control-group">
+                    <label>
+                        Яркость <span class="control-value" id="brightnessValue">0</span>
+                    </label>
+                    <input type="range" id="brightness" min="-100" max="100" value="0">
                 </div>
-            </div>
-            
-            <div class="group">
-                <label id="name-label">Name</label>
-                <textarea class="input" id="name-input" rows="2"></textarea>
-            </div>
 
-            <div class="group">
-                <label id="name-size-label">Name Size</label>
-                <input type="range" id="name-size-range" min="14" max="200" value="80" />
-            </div>
+                <div class="control-group">
+                    <label>
+                        Контраст <span class="control-value" id="contrastValue">0</span>
+                    </label>
+                    <input type="range" id="contrast" min="-100" max="100" value="0">
+                </div>
 
-            <div class="group">
-                <label id="name-font-label">Name Font</label>
-                <select class="input" id="font-input">
-                    <option>BadaboomBB</option>
-                    <option>BerlinSansDemiBold</option>
-                    <option>Komika Hand</option>
-                    <option>Komika Slick</option>
-                    <option>Adam Warren Pro</option>
-                    <option>Adam Warren Pro Bold</option>
-                    <option>Feast of Flesh BB</option>
-                </select>
-            </div>
+                <div class="control-group">
+                    <label>
+                        Насыщенность <span class="control-value" id="saturationValue">0</span>
+                    </label>
+                    <input type="range" id="saturation" min="-100" max="100" value="0">
+                </div>
 
-            <div class="group">
-                <label id="name-color-label">Name Color</label>
-                <input class="input" type="color" id="color-input" value="#FFFFFF">
-            </div>
+                <div class="control-group">
+                    <label>
+                        Размытие <span class="control-value" id="blurValue">0</span>
+                    </label>
+                    <input type="range" id="blur" min="0" max="10" value="0">
+                </div>
 
-            <div class="group">
-                <label id="desc-label">Description</label>
-                <textarea class="input" id="desc-input" rows="5"></textarea>
-            </div>
-
-            <div class="group">
-                <button class="btn" id="download-button">Download Card</button>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" id="resetBtn">Сброс</button>
+                    <button class="btn btn-primary" id="downloadBtn">Скачать</button>
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        
+        let originalImage = null;
+        let currentTemplate = 'original';
+        
+        const settings = {
+            brightness: 0,
+            contrast: 0,
+            saturation: 0,
+            blur: 0
+        };
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        originalImage = img;
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        canvas.style.display = 'block';
+                        uploadArea.style.display = 'none';
+                        applyEffects();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentTemplate = this.dataset.template;
+                if (originalImage) applyEffects();
+            });
+        });
+
+        const controls = ['brightness', 'contrast', 'saturation', 'blur'];
+        controls.forEach(control => {
+            const input = document.getElementById(control);
+            const valueDisplay = document.getElementById(control + 'Value');
+            
+            input.addEventListener('input', function() {
+                settings[control] = parseInt(this.value);
+                valueDisplay.textContent = this.value;
+                if (originalImage) applyEffects();
+            });
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            controls.forEach(control => {
+                const input = document.getElementById(control);
+                const valueDisplay = document.getElementById(control + 'Value');
+                input.value = control === 'blur' ? 0 : 0;
+                settings[control] = 0;
+                valueDisplay.textContent = '0';
+            });
+            
+            document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-template="original"]').classList.add('active');
+            currentTemplate = 'original';
+            
+            if (originalImage) applyEffects();
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            if (!originalImage) {
+                alert('Пожалуйста, загрузите изображение');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = 'edited-photo.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        function applyEffects() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (settings.blur > 0) {
+                ctx.filter = `blur(${settings.blur}px)`;
+            } else {
+                ctx.filter = 'none';
+            }
+            
+            ctx.drawImage(originalImage, 0, 0);
+            
+            ctx.filter = 'none';
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            applyTemplate(data, currentTemplate);
+            applyBrightness(data, settings.brightness);
+            applyContrast(data, settings.contrast);
+            applySaturation(data, settings.saturation);
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function applyTemplate(data, template) {
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                switch(template) {
+                    case 'grayscale':
+                        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                        data[i] = data[i + 1] = data[i + 2] = gray;
+                        break;
+                        
+                    case 'sepia':
+                        data[i] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
+                        data[i + 1] = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);
+                        data[i + 2] = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);
+                        break;
+                        
+                    case 'vintage':
+                        data[i] = Math.min(255, r * 1.2);
+                        data[i + 1] = Math.min(255, g * 1.05);
+                        data[i + 2] = Math.min(255, b * 0.8);
+                        break;
+                        
+                    case 'cool':
+                        data[i] = Math.min(255, r * 0.8);
+                        data[i + 1] = Math.min(255, g * 0.95);
+                        data[i + 2] = Math.min(255, b * 1.2);
+                        break;
+                        
+                    case 'warm':
+                        data[i] = Math.min(255, r * 1.2);
+                        data[i + 1] = Math.min(255, g * 1.05);
+                        data[i + 2] = Math.min(255, b * 0.8);
+                        break;
+                        
+                    case 'dramatic':
+                        const avg = (r + g + b) / 3;
+                        const factor = 1.5;
+                        data[i] = Math.min(255, avg + (r - avg) * factor);
+                        data[i + 1] = Math.min(255, avg + (g - avg) * factor);
+                        data[i + 2] = Math.min(255, avg + (b - avg) * factor);
+                        break;
+                }
+            }
+        }
+
+        function applyBrightness(data, value) {
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = Math.max(0, Math.min(255, data[i] + value));
+                data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + value));
+                data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + value));
+            }
+        }
+
+        function applyContrast(data, value) {
+            const factor = (259 * (value + 255)) / (255 * (259 - value));
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = Math.max(0, Math.min(255, factor * (data[i] - 128) + 128));
+                data[i + 1] = Math.max(0, Math.min(255, factor * (data[i + 1] - 128) + 128));
+                data[i + 2] = Math.max(0, Math.min(255, factor * (data[i + 2] - 128) + 128));
+            }
+        }
+
+        function applySaturation(data, value) {
+            const factor = (value + 100) / 100;
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                data[i] = Math.max(0, Math.min(255, gray + factor * (data[i] - gray)));
+                data[i + 1] = Math.max(0, Math.min(255, gray + factor * (data[i + 1] - gray)));
+                data[i + 2] = Math.max(0, Math.min(255, gray + factor * (data[i + 2] - gray)));
+            }
+        }
+    </script>
 </body>
 </html>
